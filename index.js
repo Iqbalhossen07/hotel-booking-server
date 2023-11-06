@@ -58,15 +58,15 @@ async function run() {
         res.send(result)
     })
 
-    // app.post('/hotelBookings',async(req,res)=>{
-    //     const booking=req.body;
-    //     const result = await bookingsCollection.insertOne(booking)
-    //     res.send(result)
-    // })
+      // app.post('/hotelBookings',async(req,res)=>{
+      //     const booking=req.body;
+      //     const result = await bookingsCollection.insertOne(booking)
+      //     res.send(result)
+      // })
     app.post("/hotelBookings", async (req, res) => {
         const bookingData = req.body;
     
-        // Check if a booking already exists for the user and date
+        
        
         const existingBooking = await bookingsCollection.findOne({
             email: bookingData.email,
@@ -78,19 +78,12 @@ async function run() {
         if (existingBooking) {
             return res.status(400).json({ message: "It is AllReady Selected" });
         } else {
-            // Insert the new booking into the database
             const result = await bookingsCollection.insertOne(bookingData);
             res.status(200).json({ insertedId: result.insertedId });
         }
     });
 
-    // review create 
-    // app.post('/reviewBooking',async(req,res)=>{
-    //   const reviewData = req.body;
-    //   const result = await reviewCollection.insertOne(reviewData) 
-    //   res.send(result)
-    //   console.log(reviewData)
-    // })
+   
 
     app.post('/reviewBooking',async(req,res)=>{
       const reviewData = req.body;
