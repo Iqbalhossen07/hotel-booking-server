@@ -1,17 +1,29 @@
 const express = require('express')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 const cors = require('cors')
+require('dotenv').config()
 const app = express()
 const port =process.env.PORT || 5000
 
 // middleware 
+app.use(cors({
+  origin: [
+    'http://localhost:5173'
+  ],
+  credentials:true
+}))
+app.use(express.json())
 
-// password: yBRPjamYodFvFh0p
-// userName: Hotel-Booking
 
 
 
-const uri = "mongodb+srv://Hotel-Booking:yBRPjamYodFvFh0p@cluster0.vtrfwez.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vtrfwez.mongodb.net/?retryWrites=true&w=majority`;
+
+console.log(uri)
+
+
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -32,7 +44,15 @@ async function run() {
     const bookingsCollection = client.db("Hotel_Booking").collection("hotelBookings");
     const reviewCollection = client.db("Hotel_Booking").collection("reviewBooking");
 
-  
+  // jwt added 
+    app.post('/jwt',async(req,res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      console.log('hitting jwt',user)
+      // console.log(ACCESS_TOKEN_SECRET)
+      res.send({token})
+    })
+
 
     app.get('/bookings',async(req,res)=>{
         const cursor = hotelBookingsCollection.find();
