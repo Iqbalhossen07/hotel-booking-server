@@ -132,7 +132,7 @@ async function run() {
     app.delete('/hotelBookings/:id',async(req,res)=>{
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
-        const result = await reviewCollection.deleteOne(query);
+        const result = await bookingsCollection.deleteOne(query);
         res.send(result)
       })
 
