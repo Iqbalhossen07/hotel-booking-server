@@ -9,11 +9,7 @@ const app = express()
 const port =process.env.PORT || 5000
 
 // middleware 
-// app.use(cors({
-//   origin:['http://localhost:5173',"http://127.0.0.1:5173"],
-//   optionSuccessStatus:200,
-//   credentials:true,methods: ["GET","POST","PATCH","PUT","DELETE"]
-// }))
+
 
 app.use(cors({
   origin:['http://localhost:5173'],
@@ -24,7 +20,11 @@ app.use(cookieParser())
 app.use(express.json())
 
 
-
+// app.use(cors({
+//   origin:['http://localhost:5173',"http://127.0.0.1:5173"],
+//   optionSuccessStatus:200,
+//   credentials:true,methods: ["GET","POST","PATCH","PUT","DELETE"]
+// }))
 
 
 
