@@ -1,19 +1,29 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const cors = require('cors')
 const app = express()
+
 const port =process.env.PORT || 5000
 
 // middleware 
+// app.use(cors({
+//   origin:['http://localhost:5173',"http://127.0.0.1:5173"],
+//   optionSuccessStatus:200,
+//   credentials:true,methods: ["GET","POST","PATCH","PUT","DELETE"]
+// }))
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173'
-  ],
+  origin:['http://localhost:5173'],
   credentials:true
 }))
+app.use(cookieParser())
+// app.use(cors())
 app.use(express.json())
+
+
 
 
 
@@ -45,30 +55,70 @@ async function run() {
     const reviewCollection = client.db("Hotel_Booking").collection("reviewBooking");
 
   // jwt added 
-    app.post('/jwt',async(req,res)=>{
-      const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-      console.log('hitting jwt',user)
-      // console.log(ACCESS_TOKEN_SECRET)
-      res.send({token})
+  app.post('/jwt',async(req,res)=>{
+    const user = req.body;
+    // console.log('hitting jwt',user)
+    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    // cookie saved
+    res
+    .cookie('token', token,{
+      httpOnly: true,
+      secure:false,
     })
+    .send({success: true})
+
+    
+  })
+
+   //  verify token 
+   const verifyToken = async(req,res,next)=>{
+    const token = req.cookies.token;
+    // console.log('token in the middle ware', token)
+    if(!token){
+      return res.status(401).send({message:"unauthorized"})
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=> {
+      if(err){
+        return res.status(401).send({message:"unauthorized"})
+      }
+      req.user = decoded;
+      next();
+    });
+  }
 
 
-    app.get('/bookings',async(req,res)=>{
+  // jwt post 
+  app.post('/logout',async(req,res)=>{
+    const user = req.body;
+    console.log('logging out', user)
+    res.clearCookie('token', {maxAge:0}).send({success:true})
+  })
+
+
+    app.get('/bookings', async(req,res)=>{
+      // console.log('tok tok token',req.cookies.token)
+      // if(req.query.email !== req.user.email){
+      //   return res.status(403).send({message:"forbidden"})
+      // }
         const cursor = hotelBookingsCollection.find();
         const result = await cursor.toArray()
         res.send(result)
 
     })
-    app.get('/bookings/:id',async(req,res)=>{
+    app.get('/bookings/:id', async(req,res)=>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
         const result = await hotelBookingsCollection.findOne(query);
         res.send(result)
     })
 
-    app.get('/hotelBookings', async(req,res)=>{
-       
+     
+    app.get('/hotelBookings',verifyToken, async(req,res)=>{
+      console.log('tok tok token',req.cookies.token)
+      if(req.query.email !== req.user.email){
+        return res.status(403).send({message:"forbidden"})
+      }
+
         let query = {};
         if(req.query?.email){
           query = {email: req.query.email }
@@ -78,6 +128,11 @@ async function run() {
         res.send(result)
     })
 
+  
+
+
+
+
       // app.post('/hotelBookings',async(req,res)=>{
       //     const booking=req.body;
       //     const result = await bookingsCollection.insertOne(booking)
@@ -85,9 +140,7 @@ async function run() {
       // })
     app.post("/hotelBookings", async (req, res) => {
         const bookingData = req.body;
-    
-        
-       
+  
         const existingBooking = await bookingsCollection.findOne({
             email: bookingData.email,
             Price_per_night: bookingData.Price_per_night,
@@ -109,10 +162,13 @@ async function run() {
       const reviewData = req.body;
       const result = await reviewCollection.insertOne(reviewData) 
       res.send(result)
-      console.log(reviewData)
+      // console.log(reviewData)
     })
 
     app.get('/hotelBookings',async(req,res)=>{
+      if(req.query.email !== req.user.email){
+        return res.status(403).send({message:"forbidden"})
+      }
       const cursor = hotelBookingsCollection.find();
         const result = await cursor.toArray()
         res.send(result) 
@@ -128,7 +184,10 @@ async function run() {
     })
 
     // review get 
-   app.get('/reviewBooking',async(req,res)=>{
+   app.get('/reviewBooking', async(req,res)=>{
+    // if(req.query.displayName !== req.user.displayName){
+    //   return res.status(403).send({message:"forbidden"})
+    // }
     let query = {};
         if(req.query?.displayName){
           query = {displayName: req.query.displayName }
@@ -197,7 +256,7 @@ async function run() {
     };
     const result = await bookingsCollection.updateOne(filter, updateDoc, options);
     res.send(result)
-    console.log('hitting',id,booking)
+    // console.log('hitting',id,booking)
   })
     
 
@@ -216,8 +275,8 @@ async function run() {
 run().catch(console.dir);
 
 
-app.use(cors())
-app.use(express.json())
+// app.use(cors())
+// app.use(express.json())
 
 
 app.get('/', (req, res) => {
