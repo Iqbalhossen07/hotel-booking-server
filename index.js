@@ -20,7 +20,7 @@ app.use(express.json())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vtrfwez.mongodb.net/?retryWrites=true&w=majority`;
 
-console.log(uri)
+
 
 
 
@@ -139,6 +139,29 @@ async function run() {
    })
   
 
+
+  //  this code 
+  app.get('/checkBookingExists/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+  
+    try {
+      const result = await bookingsCollection.findOne(query);
+  
+      if (result) {
+        // A booking exists for the room
+        res.json({ bookingExists: true });
+      } else {
+        // No booking found for the room
+        res.json({ bookingExists: false });
+      }
+    } catch (error) {
+      console.error("Error checking booking existence:", error);
+      res.status(500).json({ error: "An error occurred while checking booking existence" });
+    }
+  });
+  
+  
    
 
     // bookings Delete 
