@@ -47,12 +47,28 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
 
     const hotelBookingsCollection = client.db("Hotel_Booking").collection("bookings");
     const bookingsCollection = client.db("Hotel_Booking").collection("hotelBookings");
     const reviewCollection = client.db("Hotel_Booking").collection("reviewBooking");
+
+//  verify token 
+const verifyToken = async(req,res,next)=>{
+  const token = req.cookies.token;
+  if(!token){
+    return res.status(401).send({message:"unauthorized"})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=> {
+    if(err){
+      return res.status(401).send({message:"unauthorized"})
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
 
   // jwt added 
   app.post('/jwt',async(req,res)=>{
@@ -70,21 +86,7 @@ async function run() {
     
   })
 
-   //  verify token 
-   const verifyToken = async(req,res,next)=>{
-    const token = req.cookies.token;
-    // console.log('token in the middle ware', token)
-    if(!token){
-      return res.status(401).send({message:"unauthorized"})
-    }
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=> {
-      if(err){
-        return res.status(401).send({message:"unauthorized"})
-      }
-      req.user = decoded;
-      next();
-    });
-  }
+   
 
 
   // jwt post 
@@ -96,7 +98,6 @@ async function run() {
 
 
     app.get('/bookings', async(req,res)=>{
-      // console.log('tok tok token',req.cookies.token)
       // if(req.query.email !== req.user.email){
       //   return res.status(403).send({message:"forbidden"})
       // }
@@ -114,7 +115,6 @@ async function run() {
 
      
     app.get('/hotelBookings',verifyToken, async(req,res)=>{
-      console.log('tok tok token',req.cookies.token)
       if(req.query.email !== req.user.email){
         return res.status(403).send({message:"forbidden"})
       }
@@ -269,7 +269,7 @@ async function run() {
   
 
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
