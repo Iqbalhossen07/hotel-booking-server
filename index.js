@@ -133,11 +133,7 @@ async function run() {
 
 
 
-      // app.post('/hotelBookings',async(req,res)=>{
-      //     const booking=req.body;
-      //     const result = await bookingsCollection.insertOne(booking)
-      //     res.send(result)
-      // })
+     
     app.post("/hotelBookings", async (req, res) => {
         const bookingData = req.body;
   
