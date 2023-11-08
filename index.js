@@ -192,6 +192,14 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result)
    })
+
+  //  review Delete 
+  app.delete('/reviewBooking/:id',async(req,res)=>{
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await reviewCollection.deleteOne(query);
+    res.send(result)
+  })
   
 
 
