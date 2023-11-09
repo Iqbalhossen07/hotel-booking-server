@@ -188,12 +188,14 @@ const verifyToken = async(req,res,next)=>{
 
     // review get 
    app.get('/reviewBooking', async(req,res)=>{
+    console.log(req.query?.email)
     let query = {};
         if(req.query?.email){
-          query = {email: req.query?.email }
+          query = {stateChanged: req.query?.email }
         }
         const cursor = reviewCollection.find(query);
         const result = await cursor.toArray();
+        console.log(result)
         res.send(result)
    })
 
