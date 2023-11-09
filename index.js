@@ -12,11 +12,13 @@ const port =process.env.PORT || 5000
 
 
 app.use(cors({
-  origin:['http://localhost:5173'],
+  origin:[
+  'https://hotel-booking-61cec.web.app',
+  'https://hotel-booking-61cec.firebaseapp.com'
+  ],
   credentials:true
 }))
 app.use(cookieParser())
-// app.use(cors())
 app.use(express.json())
 
 
@@ -54,7 +56,30 @@ async function run() {
     const bookingsCollection = client.db("Hotel_Booking").collection("hotelBookings");
     const reviewCollection = client.db("Hotel_Booking").collection("reviewBooking");
 
-//  verify token 
+
+
+
+  // jwt added 
+  app.post('/jwt',async(req,res)=>{
+    const user = req.body;
+    // console.log('hitting jwt',user)
+    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    // cookie saved
+    res
+    .cookie('token', token,{
+      // httpOnly: true,
+      // secure:false,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    })
+    .send({success: true})
+
+    
+  })
+
+
+  //  verify token 
 const verifyToken = async(req,res,next)=>{
   const token = req.cookies.token;
   if(!token){
@@ -68,24 +93,6 @@ const verifyToken = async(req,res,next)=>{
     next();
   });
 }
-
-
-  // jwt added 
-  app.post('/jwt',async(req,res)=>{
-    const user = req.body;
-    // console.log('hitting jwt',user)
-    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-    // cookie saved
-    res
-    .cookie('token', token,{
-      httpOnly: true,
-      secure:false,
-    })
-    .send({success: true})
-
-    
-  })
-
    
 
 
@@ -181,12 +188,9 @@ const verifyToken = async(req,res,next)=>{
 
     // review get 
    app.get('/reviewBooking', async(req,res)=>{
-    // if(req.query.displayName !== req.user.displayName){
-    //   return res.status(403).send({message:"forbidden"})
-    // }
     let query = {};
-        if(req.query?.displayName){
-          query = {displayName: req.query.displayName }
+        if(req.query?.email){
+          query = {email: req.query?.email }
         }
         const cursor = reviewCollection.find(query);
         const result = await cursor.toArray();
